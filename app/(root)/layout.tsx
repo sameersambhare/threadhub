@@ -34,7 +34,7 @@ export default function RootLayout({
       >
         <ClerkProvider>
           <Header />
-          <main>
+          <main className="flex flex-row">
             <Leftsidebar />
             <section className="main-container">
               <div className="w-full max-w-4xl">
