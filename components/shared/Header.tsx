@@ -11,7 +11,7 @@ const Header = () => {
       </Link>
       <div className="flex items-center gap-1">
         <div className="block md:hidden">
-          <SignedIn>
+        <SignedIn>
             <SignOutButton>
               <div className="flex cursor-pointer">
                 <Image src='/assets/logout.svg' alt="logout" width={24} height={24}></Image>
