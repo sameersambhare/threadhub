@@ -19,6 +19,10 @@ import { Input } from "../ui/input"
 import { ChangeEvent, useEffect, useState } from "react"
 import { isBase64Image } from "@/lib/utils"
 import { useUploadThing } from '@/lib/uploadthing'
+import { updateUser } from "@/lib/actions/user.actions"
+import { usePathname, useRouter } from "next/navigation"
+
+
 
 interface AccountProfileProps {
     user: {
@@ -34,6 +38,8 @@ interface AccountProfileProps {
 }
 
 const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
+    const pathname = usePathname();
+    const router = useRouter();
     const [files, setFiles] = useState<File[]>([])
     const { startUpload } = useUploadThing("media")
     const form = useForm<z.infer<typeof UserValidation>>({
@@ -68,8 +74,14 @@ const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
                 values.profile_photo = imgRes[0].url;
             }
         }
-        //TODO: Update the user profile
-        
+
+        await updateUser({ username: values.username, bio: values.bio, image: values.profile_photo, userid: user.id, path: pathname, name: values.name })
+        if (pathname === '/profile/edit') {
+            router.back()
+        }
+        else {
+            router.push('/')
+        }
     }
     return (
         <div>
