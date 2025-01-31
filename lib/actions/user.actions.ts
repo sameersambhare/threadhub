@@ -42,3 +42,15 @@ export async function updateUser({
     throw new Error(`Failed to create the user: ${error.message}`);
   }
 }
+
+export async function fetchUser(userId: string) {
+  try {
+    return await User.findOne({ userId })
+    // .populate({
+    //   path:'communities',
+    //   model:Community
+    // });
+  } catch (err: any) {
+    throw new Error(`Failed to fetch the user: ${err.message}`);
+  }
+}

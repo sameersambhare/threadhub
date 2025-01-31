@@ -42,6 +42,7 @@ const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
     const router = useRouter();
     const [files, setFiles] = useState<File[]>([])
     const { startUpload } = useUploadThing("media")
+
     const form = useForm<z.infer<typeof UserValidation>>({
         resolver: zodResolver(UserValidation),
         defaultValues: {
@@ -104,6 +105,7 @@ const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
                                 <FormControl className="flex-1 text-base-semibold text-gray-200">
                                     <Input type="file" accept="image/*" placeholder="Upload a photo" className="account-form_image-input" onChange={(e) => { handleImage(e, field.onChange) }} />
                                 </FormControl>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
@@ -118,6 +120,7 @@ const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
                                 <FormControl>
                                     <Input type="text" className="account-form_input no-focus" {...field} />
                                 </FormControl>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
@@ -132,6 +135,7 @@ const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
                                 <FormControl>
                                     <Input type="text" className="account-form_input no-focus" {...field} />
                                 </FormControl>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
@@ -146,6 +150,7 @@ const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
                                 <FormControl>
                                     <Textarea rows={10} className="account-form_input no-focus" {...field} />
                                 </FormControl>
+                                <FormMessage />
                             </FormItem>
                         )}
                     />
