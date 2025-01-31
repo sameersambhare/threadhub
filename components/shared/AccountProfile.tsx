@@ -16,7 +16,9 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "../ui/input"
-import { ChangeEvent } from "react"
+import { ChangeEvent, useEffect, useState } from "react"
+import { isBase64Image } from "@/lib/utils"
+import { useUploadThing } from '@/lib/uploadthing'
 
 interface AccountProfileProps {
     user: {
@@ -32,6 +34,8 @@ interface AccountProfileProps {
 }
 
 const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
+    const [files, setFiles] = useState<File[]>([])
+    const { startUpload } = useUploadThing("media")
     const form = useForm<z.infer<typeof UserValidation>>({
         resolver: zodResolver(UserValidation),
         defaultValues: {
@@ -41,13 +45,31 @@ const AccountProfile = ({ user, btnTitle }: AccountProfileProps) => {
             bio: user?.bio || ""
         },
     })
-    const handleImage = (e: ChangeEvent, fieldChange: (value: string) => void) => {
+    const handleImage = (e: ChangeEvent<HTMLInputElement>, fieldChange: (value: string) => void) => {
         e.preventDefault();
+        const fileReader = new FileReader();
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0]
+            setFiles(Array.from(e.target.files))
+            if (!file.type.includes('image')) return
+            fileReader.onload = async (event) => {
+                const imageDataUrl = event.target?.result?.toString() || "";
+                fieldChange(imageDataUrl);
+            }
+            fileReader.readAsDataURL(file)
+        }
     }
-    function onSubmit(values: z.infer<typeof UserValidation>) {
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
-        console.log(values)
+    const onSubmit = async (values: z.infer<typeof UserValidation>) => {
+        const blob = values.profile_photo;
+        const hasImageChange = isBase64Image(blob)
+        if (hasImageChange) {
+            const imgRes = await startUpload(files)
+            if (imgRes && imgRes[0].url) {
+                values.profile_photo = imgRes[0].url;
+            }
+        }
+        //TODO: Update the user profile
+        
     }
     return (
         <div>
