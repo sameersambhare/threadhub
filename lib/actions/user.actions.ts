@@ -3,9 +3,10 @@
 import User from "@/lib/models/user.model";
 import { connectToDB } from "../mongoose";
 import { revalidatePath } from "next/cache";
+import Thread from "../models/thread.model";
 
 interface Params {
-  userid: string;
+  userId: string;
   username: string;
   name: string;
   image: string;
@@ -13,18 +14,33 @@ interface Params {
   path: string;
 }
 
-export async function updateUser({
-  userid,
-  username,
-  name,
-  image,
-  bio,
-  path,
-}: Params): Promise<void> {
-  connectToDB();
+export async function fetchUser(userId: string) {
   try {
+    connectToDB();
+
+    return await User.findOne({ id: userId });
+    // .populate({
+    //   path: "communities",
+    //   model: Community,
+    // });
+  } catch (error: any) {
+    throw new Error(`Failed to fetch user: ${error.message}`);
+  }
+}
+
+export async function updateUser({
+  userId,
+  bio,
+  name,
+  path,
+  username,
+  image,
+}: Params): Promise<void> {
+  try {
+    connectToDB();
+
     await User.findOneAndUpdate(
-      { id: userid },
+      { id: userId },
       {
         username: username.toLowerCase(),
         name,
@@ -39,18 +55,28 @@ export async function updateUser({
       revalidatePath(path);
     }
   } catch (error: any) {
-    throw new Error(`Failed to create the user: ${error.message}`);
+    throw new Error(`Failed to create/update user: ${error.message}`);
   }
 }
 
-export async function fetchUser(userId: string) {
+export async function fetchUserPosts(userId: string) {
   try {
-    return await User.findOne({ userId })
-    // .populate({
-    //   path:'communities',
-    //   model:Community
-    // });
+    connectToDB();
+    const threads = await User.findOne({ id: userId }).populate({
+      path: "threads",
+      model: Thread,
+      populate: {
+        path: "children",
+        model: Thread,
+        populate: {
+          path: "author",
+          model: User,
+          select: "name image id",
+        },
+      },
+    });
+    return threads;
   } catch (err: any) {
-    throw new Error(`Failed to fetch the user: ${err.message}`);
+    throw new Error(`Error in fetching the user's posts: ${err.message}`);
   }
 }
