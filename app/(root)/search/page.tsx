@@ -18,13 +18,13 @@ const page = async () => {
                 Search
             </h1>
             <div className="mt-14 flex flex-col gap-9">
-                {result?.users.length===0?(
+                {result?.users.length === 0 ? (
                     <p className="no-results">No Users</p>
-                ):(
+                ) : (
                     <>
-                    {result?.users.map((person)=>(
-                        <UserCard/>
-                    ))}
+                        {result?.users.map((person) => (
+                            <UserCard key={person.id} id={person.id} name={person.name} username={person.username} imgUrl={person.image} personType='User' />
+                        ))}
                     </>
                 )}
 
