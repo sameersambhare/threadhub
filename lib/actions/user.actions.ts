@@ -82,50 +82,82 @@ export async function fetchUserPosts(userId: string) {
   }
 }
 
-
-interface fetchAllUsersParams{
-    userId: string;
-    searchString: string;
-    pageNumber: number;
-    pageAmount: number;
-    sortBy: SortOrder;
-  }
+interface fetchAllUsersParams {
+  userId: string;
+  searchString: string;
+  pageNumber: number;
+  pageAmount: number;
+  sortBy: SortOrder;
+}
 export async function fetchAllUsers({
   userId,
   searchString = "",
   pageNumber = 1,
   pageAmount = 20,
   sortBy = "desc",
-}:fetchAllUsersParams) {
+}: fetchAllUsersParams) {
   try {
     connectToDB();
     const skipAmount = (pageNumber - 1) * pageAmount;
     const regex = new RegExp(searchString, "i");
-    const query:FilterQuery<typeof User>={
-      id:{$ne:userId}
+    const query: FilterQuery<typeof User> = {
+      id: { $ne: userId },
+    };
+    if (searchString.trim() !== "") {
+      query.$or = [
+        {
+          username: {
+            $regex: regex,
+          },
+        },
+        {
+          name: {
+            $regex: regex,
+          },
+        },
+      ];
     }
-    if(searchString.trim()!==""){
-      query.$or=[
-        {username:{
-          $regex:regex
-        }},
-        {name:{
-          $regex:regex
-        }}
-      ]
-    }
-    const sortOptions={createdAt:sortBy}
-    const userQuery=User.find(query)
-    .sort(sortOptions)
-    .skip(skipAmount)
-    .limit(pageAmount)
+    const sortOptions = { createdAt: sortBy };
+    const userQuery = User.find(query)
+      .sort(sortOptions)
+      .skip(skipAmount)
+      .limit(pageAmount);
 
-    const totalUsersCount=await User.countDocuments(query);
+    const totalUsersCount = await User.countDocuments(query);
 
-    const users =await userQuery.exec();
-    const isNext= totalUsersCount>skipAmount*users.length;
-    return{users, isNext}
+    const users = await userQuery.exec();
+    const isNext = totalUsersCount > skipAmount * users.length;
+    return { users, isNext };
   } catch (err: any) {
     console.log(`Failed to fetch the users: ${err.message}`);
+  }
+}
+
+export async function fetchActivity(userId: string) {
+  try {
+    connectToDB();
+
+    // Find all threads created by the user
+    const userThreads = await Thread.find({ author: userId });
+
+    // Collect all the child thread ids (replies) from the 'children' field of each user thread
+    const childThreadIds = userThreads.reduce((acc, userThread) => {
+      return acc.concat(userThread.children);
+    }, []);
+
+    // Find and return the child threads (replies) excluding the ones created by the same user
+    const replies = await Thread.find({
+      _id: { $in: childThreadIds },
+      author: { $ne: userId }, // Exclude threads authored by the same user
+    }).populate({
+      path: "author",
+      model: User,
+      select: "name image _id",
+    });
+
+    return replies;
+  } catch (error) {
+    console.error("Error fetching replies: ", error);
+    throw error;
   }
 }
